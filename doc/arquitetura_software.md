@@ -213,4 +213,75 @@ A situação de inadimplência deve ser visualizada apenas por usuários autoriz
 ## RN09
 As observações cadastradas devem permanecer disponíveis para consultas futuras.
 
+
 ---
+
+
+# Matriz CSD - StrongFit Academia
+
+## ✅ Certezas (C)
+
+São informações confirmadas durante o levantamento e consideradas fatos do projeto.
+
+### C1
+A academia possui aproximadamente 420 alunos ativos.
+
+### C2
+O controle de mensalidades é realizado por meio de planilhas.
+
+### C3
+Existem planos mensal, trimestral e semestral.
+
+### C4
+O cliente deseja uma solução própria e não quer contratar um software por assinatura.
+
+### C5
+O MVP deve priorizar o controle de alunos, mensalidades, pagamentos e inadimplência.
+
+---
+
+## 💡 Suposições (S)
+
+São hipóteses levantadas durante a análise que precisam ser validadas com o cliente.
+
+### S1
+O sistema será utilizado principalmente pela equipe da recepção.
+
+### S2
+Os meios de pagamento iniciais (Pix e dinheiro) serão suficientes para a primeira versão.
+
+### S3
+O controle de acesso poderá ser realizado apenas com login e senha.
+
+### S4
+Os relatórios exibidos em tela atenderão às necessidades iniciais da gestão.
+
+### S5
+Os usuários terão pouca experiência com sistemas e necessitarão de uma interface simples e intuitiva.
+
+---
+
+## ❓ Dúvidas (D)
+
+São informações ainda não definidas e que precisam ser esclarecidas antes do desenvolvimento.
+
+### D1
+Quais dados serão obrigatórios no cadastro do aluno?
+
+### D2
+Qual é a regra exata para considerar um aluno inadimplente?
+
+### D3
+Qual será o processo e as regras para congelamento de planos?
+
+### D4
+Será necessário exportar relatórios para PDF ou Excel?
+
+### D5
+Existirão diferentes níveis de acesso (recepção, gerente, proprietário)?
+
+---
+
+# Modelagem de banco de dados
+
+<img src="./assets/modelagem-DB-strongfit.svg" alt="Modelagem do Banco de Dados Strongfit" width="800>"
