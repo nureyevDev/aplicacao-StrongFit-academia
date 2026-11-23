@@ -284,4 +284,4 @@ Existirão diferentes níveis de acesso (recepção, gerente, proprietário)?
 
 # Modelagem de banco de dados
 
-![Modelagem do Banco de Dados Strongfit](./assets/modelagem-DB-strongfit.svg) 
+![Modelagem do Banco de Dados Strongfit](./assets/modelagem-DB-strongfit.png) 
