@@ -1,4 +1,13 @@
 from PySide6.QtCore import Qt
+from strongfit.ui.pagina_alunos import (
+    PaginaAlunos,
+)
+from strongfit.ui.pagina_inicio import (
+    PaginaInicio,
+)
+from strongfit.ui.pagina_planos import (
+    PaginaPlanos,
+)
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
@@ -61,6 +70,10 @@ class JanelaPrincipal(QMainWindow):
         )
 
         self.pagina_alunos = PaginaAlunos(
+            self.conexao
+        )
+        
+        self.pagina_planos = PaginaPlanos(
             self.conexao
         )
 
@@ -180,6 +193,9 @@ class JanelaPrincipal(QMainWindow):
 
         if indice == 1:
             self.pagina_alunos.atualizar_tabela()
+            
+        if indice == 2:
+            self.pagina_planos.atualizar_tabela()
 
     def aplicar_estilo(self):
         self.setStyleSheet(
@@ -273,7 +289,9 @@ class JanelaPrincipal(QMainWindow):
 
             QLineEdit,
             QComboBox,
-            QDateEdit {
+            QDateEdit,
+            QSpinBox,
+            QDoubleSpinBox {
                 background-color: #ffffff;
                 color: #243128;
                 border: 1px solid #aebcb1;
@@ -284,7 +302,9 @@ class JanelaPrincipal(QMainWindow):
 
             QLineEdit:focus,
             QComboBox:focus,
-            QDateEdit:focus {
+            QDateEdit:focus,
+            QSpinBox:focus,
+            QDoubleSpinBox:focus {
                 border: 2px solid #3b684a;
             }
 
@@ -338,5 +358,23 @@ class JanelaPrincipal(QMainWindow):
                 padding: 9px;
                 font-family: "Segoe UI Semibold";
             }
+            
+            QCheckBox {
+                color: #34483a;
+                spacing: 8px;
+            }
+
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border: 1px solid #97aa9b;
+                border-radius: 4px;
+                background-color: #ffffff;
+            }
+
+            QCheckBox::indicator:checked {
+                background-color: #3b684a;
+                border-color: #294a35;
+            }
             """
-        )
+            )
