@@ -139,10 +139,12 @@ def editar_aluno(
     endereco,
     situacao,
 ):
-    if repo.obter_aluno(
+    aluno = repo.obter_aluno(
         conexao,
         aluno_id,
-    ) is None:
+    )
+
+    if aluno is None:
         raise RegraNegocioErro(
             "O aluno selecionado não existe."
         )
@@ -157,15 +159,17 @@ def editar_aluno(
         situacao,
     )
 
+    cpf_normalizado = dados[1]
     existente = None
 
-    if dadosexistente = repo.buscar_aluno_por_cpf(
+    if cpf_normalizado:
+        existente = repo.buscar_aluno_por_cpf(
             conexao,
-            dados[1],
+            cpf_normalizado,
         )
 
     if (
-        existente
+        existente is not None
         and existente["id"] != aluno_id
     ):
         raise RegraNegocioErro(
