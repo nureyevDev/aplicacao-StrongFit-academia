@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
 from strongfit.ui.pagina_alunos import PaginaAlunos
 from strongfit.ui.pagina_inicio import PaginaInicio
 from strongfit.ui.pagina_planos import PaginaPlanos
+from strongfit.ui.pagina_matriculas import PaginaMatriculas
+
 class JanelaPrincipal(QMainWindow):
     def __init__(self, conexao):
         super().__init__()
@@ -52,6 +54,11 @@ class JanelaPrincipal(QMainWindow):
         self.pagina_planos = PaginaPlanos(
             self.conexao
         )
+        
+        self.paginas.addWidget(
+            self.pagina_matriculas
+        )
+
 
         self.paginas.addWidget(
             self.pagina_inicio
@@ -176,8 +183,10 @@ class JanelaPrincipal(QMainWindow):
                     indice_atual
                 ].setChecked(True)
 
-            return
-
+            elif indice == 3:
+                self.pagina_matriculas.atualizar_tudo()
+                
+                
         self.paginas.setCurrentIndex(indice)
 
         if indice == 0:
@@ -246,6 +255,15 @@ class JanelaPrincipal(QMainWindow):
 
             QPushButton#botaoPerigo:hover {
                 background-color: #bd514a;
+            }
+
+            QLabel#destaque {
+                background-color: #e4eee6;
+                color: #294a35;
+                border: 1px solid #b7cbbb;
+                border-radius: 6px;
+                padding: 8px;
+                font-family: "Segoe UI Semibold";
             }
 
             QPushButton#botaoPerigo:pressed {
