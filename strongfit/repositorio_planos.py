@@ -162,3 +162,15 @@ def contar_matriculas_do_plano(
     ).fetchone()
 
     return linha["quantidade"]
+
+def excluir_plano(
+    conexao,
+    plano_id,
+):
+    conexao.execute(
+        """
+        DELETE FROM plano
+        WHERE id = ?
+        """,
+        (plano_id,),
+    )

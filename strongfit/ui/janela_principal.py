@@ -1,13 +1,4 @@
 from PySide6.QtCore import Qt
-from strongfit.ui.pagina_alunos import (
-    PaginaAlunos,
-)
-from strongfit.ui.pagina_inicio import (
-    PaginaInicio,
-)
-from strongfit.ui.pagina_planos import (
-    PaginaPlanos,
-)
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFrame,
@@ -20,14 +11,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from strongfit.ui.pagina_alunos import (
-    PaginaAlunos,
-)
-from strongfit.ui.pagina_inicio import (
-    PaginaInicio,
-)
-
-
+from strongfit.ui.pagina_alunos import PaginaAlunos
+from strongfit.ui.pagina_inicio import PaginaInicio
+from strongfit.ui.pagina_planos import PaginaPlanos
 class JanelaPrincipal(QMainWindow):
     def __init__(self, conexao):
         super().__init__()
@@ -48,31 +34,21 @@ class JanelaPrincipal(QMainWindow):
     def montar_interface(self):
         central = QWidget()
 
-        layout_principal = QHBoxLayout(
-            central
-        )
-        layout_principal.setContentsMargins(
-            0,
-            0,
-            0,
-            0,
-        )
+        layout_principal = QHBoxLayout(central)
+        layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
 
-        layout_principal.addWidget(
-            self.criar_barra_lateral()
-        )
+        barra_lateral = self.criar_barra_lateral()
+        layout_principal.addWidget(barra_lateral)
 
         self.paginas = QStackedWidget()
 
         self.pagina_inicio = PaginaInicio(
             self.conexao
         )
-
         self.pagina_alunos = PaginaAlunos(
             self.conexao
         )
-        
         self.pagina_planos = PaginaPlanos(
             self.conexao
         )
@@ -83,6 +59,9 @@ class JanelaPrincipal(QMainWindow):
         self.paginas.addWidget(
             self.pagina_alunos
         )
+        self.paginas.addWidget(
+            self.pagina_planos
+        )
 
         layout_principal.addWidget(
             self.paginas,
@@ -91,11 +70,14 @@ class JanelaPrincipal(QMainWindow):
 
         self.setCentralWidget(central)
 
+        print(
+            "Páginas carregadas:",
+            self.paginas.count(),
+        )
+
     def criar_barra_lateral(self):
         barra = QFrame()
-        barra.setObjectName(
-            "barraLateral"
-        )
+        barra.setObjectName("barraLateral")
         barra.setFixedWidth(230)
 
         layout = QVBoxLayout(barra)
@@ -108,9 +90,7 @@ class JanelaPrincipal(QMainWindow):
         layout.setSpacing(8)
 
         nome = QLabel("StrongFit")
-        nome.setObjectName(
-            "nomeSistema"
-        )
+        nome.setObjectName("nomeSistema")
 
         descricao = QLabel(
             "Gestão da academia"
@@ -123,10 +103,9 @@ class JanelaPrincipal(QMainWindow):
         layout.addWidget(descricao)
         layout.addSpacing(24)
 
-        self.grupo_menu = QButtonGroup(
-            self
-        )
+        self.grupo_menu = QButtonGroup(self)
         self.grupo_menu.setExclusive(True)
+        self.botoes_menu = []
 
         itens = [
             ("Visão geral", 0),
@@ -141,32 +120,26 @@ class JanelaPrincipal(QMainWindow):
         for texto, indice in itens:
             botao = QPushButton(texto)
             botao.setCheckable(True)
-            botao.setProperty(
-                "menu",
-                True,
-            )
+            botao.setProperty("menu", True)
 
             botao.clicked.connect(
-                lambda marcado,
-                pagina=indice:
+                lambda marcado=False, pagina=indice:
                 self.abrir_pagina(pagina)
             )
 
             self.grupo_menu.addButton(
-                botao
+                botao,
+                indice,
             )
-
+            self.botoes_menu.append(botao)
             layout.addWidget(botao)
 
-            if indice == 0:
-                botao.setChecked(True)
+        self.botoes_menu[0].setChecked(True)
 
         layout.addStretch()
 
-        versao = QLabel("MVP 0.1")
-        versao.setObjectName(
-            "versao"
-        )
+        versao = QLabel("MVP 0.2")
+        versao.setObjectName("versao")
         versao.setAlignment(
             Qt.AlignmentFlag.AlignCenter
         )
@@ -176,25 +149,44 @@ class JanelaPrincipal(QMainWindow):
         return barra
 
     def abrir_pagina(self, indice):
-        if indice >= self.paginas.count():
+        print(
+            "Índice solicitado:",
+            indice,
+            "| páginas disponíveis:",
+            self.paginas.count(),
+        )
+
+        if indice < 0 or indice >= self.paginas.count():
             self.statusBar().showMessage(
                 "Este módulo será implementado "
                 "nas próximas etapas.",
                 5000,
             )
+
+            indice_atual = (
+                self.paginas.currentIndex()
+            )
+
+            if (
+                0
+                <= indice_atual
+                < len(self.botoes_menu)
+            ):
+                self.botoes_menu[
+                    indice_atual
+                ].setChecked(True)
+
             return
 
-        self.paginas.setCurrentIndex(
-            indice
-        )
+        self.paginas.setCurrentIndex(indice)
 
         if indice == 0:
             self.pagina_inicio.atualizar()
 
-        if indice == 1:
+        elif indice == 1:
             self.pagina_alunos.atualizar_tabela()
-            
-        if indice == 2:
+
+        elif indice == 2:
             self.pagina_planos.atualizar_tabela()
 
     def aplicar_estilo(self):
@@ -243,6 +235,21 @@ class JanelaPrincipal(QMainWindow):
                 background-color: #3b684a;
                 color: #ffffff;
                 font-family: "Segoe UI Semibold";
+            }
+            
+            QPushButton#botaoPerigo {
+                background-color: #a6403a;
+                color: #ffffff;
+                border-color: #85332e;
+                font-family: "Segoe UI Semibold";
+            }
+
+            QPushButton#botaoPerigo:hover {
+                background-color: #bd514a;
+            }
+
+            QPushButton#botaoPerigo:pressed {
+                background-color: #7b2d29;
             }
 
             QLabel#tituloPagina {

@@ -297,14 +297,31 @@ class PaginaPlanos(QWidget):
         self.botao_alternar = QPushButton(
             "Ativar ou inativar selecionado"
         )
+        
+        self.botao_excluir = QPushButton(
+            "Excluir selecionado"
+        )
+        
+        self.botao_excluir.setObjectName(
+            "botaoPerigo"
+        )
 
         self.botao_alternar.clicked.connect(
             self.alternar_situacao_plano
         )
+        
+        self.botao_excluir.clicked.connect(
+            self.excluir_plano
+        )
 
         acoes.addStretch()
+
         acoes.addWidget(
             self.botao_alternar
+        )
+
+        acoes.addWidget(
+            self.botao_excluir
         )
 
         self.campo_pesquisa.textChanged.connect(
@@ -324,6 +341,8 @@ class PaginaPlanos(QWidget):
         layout.addLayout(acoes)
 
         return frame
+    
+       
 
     def dados_formulario(self):
         return (
@@ -543,6 +562,80 @@ class PaginaPlanos(QWidget):
 
         self.mensagem.setText(
             f"Plano {acao} com sucesso."
+        )
+
+    def excluir_plano(self):
+        linha = self.tabela.currentRow()
+
+        if linha < 0:
+            QMessageBox.warning(
+                self,
+                "StrongFit Academia",
+                "Selecione um plano na tabela.",
+            )
+            return
+
+        plano_id = int(
+            self.tabela.item(
+                linha,
+                0,
+            ).text()
+        )
+
+        plano = repo.obter_plano(
+            self.conexao,
+            plano_id,
+        )
+
+        if plano is None:
+            QMessageBox.warning(
+                self,
+                "StrongFit Academia",
+                "O plano selecionado não existe mais.",
+            )
+            return
+
+        resposta = QMessageBox.question(
+            self,
+            "Confirmar exclusão",
+            (
+                f"Deseja realmente excluir o plano "
+                f"{plano['nome']}?\n\n"
+                "Esta ação não poderá ser desfeita."
+            ),
+            (
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+            ),
+            QMessageBox.StandardButton.No,
+        )
+
+        if (
+            resposta
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+
+        try:
+            servicos_planos.excluir_plano(
+                self.conexao,
+                plano_id,
+            )
+
+        except RegraNegocioErro as erro:
+            QMessageBox.warning(
+                self,
+                "StrongFit Academia",
+                str(erro),
+            )
+            return
+
+        self.limpar_formulario()
+        self.atualizar_tabela()
+
+        self.mensagem.setText(
+            f"Plano {plano['nome']} excluído "
+            "com sucesso."
         )
 
     def limpar_formulario(self):

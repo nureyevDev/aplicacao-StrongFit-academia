@@ -183,3 +183,43 @@ def definir_plano_ativo(
             plano_id,
             ativo,
         )
+        
+def excluir_plano(
+    conexao,
+    plano_id,
+):
+    plano = repo.obter_plano(
+        conexao,
+        plano_id,
+    )
+
+    if plano is None:
+        raise RegraNegocioErro(
+            "O plano selecionado não existe."
+        )
+
+    total_matriculas = (
+        repo.contar_matriculas_do_plano(
+            conexao,
+            plano_id,
+        )
+    )
+
+    if total_matriculas > 0:
+        raise RegraNegocioErro(
+            "Este plano possui matrículas registradas "
+            "e não pode ser excluído. Inative o plano."
+        )
+
+    try:
+        with conexao:
+            repo.excluir_plano(
+                conexao,
+                plano_id,
+            )
+
+    except sqlite3.IntegrityError as erro:
+        raise RegraNegocioErro(
+            "Não foi possível excluir o plano. "
+            "Verifique se ele possui dados vinculados."
+        ) from erro
