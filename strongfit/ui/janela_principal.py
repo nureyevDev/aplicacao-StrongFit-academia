@@ -40,34 +40,43 @@ class JanelaPrincipal(QMainWindow):
         layout_principal.setContentsMargins(0, 0, 0, 0)
         layout_principal.setSpacing(0)
 
-        barra_lateral = self.criar_barra_lateral()
-        layout_principal.addWidget(barra_lateral)
+        layout_principal.addWidget(
+            self.criar_barra_lateral()
+        )
 
         self.paginas = QStackedWidget()
 
         self.pagina_inicio = PaginaInicio(
             self.conexao
         )
+
         self.pagina_alunos = PaginaAlunos(
             self.conexao
         )
+
         self.pagina_planos = PaginaPlanos(
             self.conexao
         )
-        
-        self.paginas.addWidget(
-            self.pagina_matriculas
-        )
 
+        
+        self.pagina_matriculas = PaginaMatriculas(
+            self.conexao
+        )
 
         self.paginas.addWidget(
             self.pagina_inicio
         )
+
         self.paginas.addWidget(
             self.pagina_alunos
         )
+
         self.paginas.addWidget(
             self.pagina_planos
+        )
+
+        self.paginas.addWidget(
+            self.pagina_matriculas
         )
 
         layout_principal.addWidget(
@@ -76,11 +85,6 @@ class JanelaPrincipal(QMainWindow):
         )
 
         self.setCentralWidget(central)
-
-        print(
-            "Páginas carregadas:",
-            self.paginas.count(),
-        )
 
     def criar_barra_lateral(self):
         barra = QFrame()
