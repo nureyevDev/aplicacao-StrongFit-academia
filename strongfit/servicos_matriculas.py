@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 
 from strongfit import repositorio_matriculas as repo
 from strongfit.erros import RegraNegocioErro
+from strongfit import servicos_financeiro
 
 
 def adicionar_meses(
@@ -159,6 +160,13 @@ def criar_matricula(
                 aluno_id,
                 plano_id,
                 data_inicio.isoformat(),
+                vencimento.isoformat(),
+                float(valor),
+            )
+
+            servicos_financeiro.criar_mensalidade_inicial(
+                conexao,
+                matricula_id,
                 vencimento.isoformat(),
                 float(valor),
             )
