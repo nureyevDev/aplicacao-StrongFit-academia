@@ -315,3 +315,317 @@ def total_recebido(
     ).fetchone()
 
     return linha["total"]
+
+def marcar_mensalidades_atrasadas(
+    conexao,
+    hoje,
+):
+    cursor = conexao.execute(
+        """
+        UPDATE mensalidade
+        SET situacao = 'atrasada'
+        WHERE situacao = 'pendente'
+          AND date(data_vencimento) < date(?)
+          AND matricula_id IN (
+                SELECT m.id
+                FROM matricula m
+                WHERE m.situacao NOT IN (
+                    'congelada',
+                    'encerrada'
+                )
+          )
+        """,
+        (hoje,),
+    )
+
+    return cursor.rowcount
+
+
+def atualizar_alunos_inadimplentes(
+    conexao,
+    hoje,
+):
+    conexao.execute(
+        """
+        UPDATE aluno
+        SET
+            situacao = 'inadimplente',
+            atualizado_em = CURRENT_TIMESTAMP
+        WHERE situacao NOT IN (
+            'congelado',
+            'inativo'
+        )
+          AND EXISTS (
+                SELECT 1
+                FROM matricula m
+                JOIN mensalidade men
+                    ON men.matricula_id = m.id
+                WHERE m.aluno_id = aluno.id
+                  AND m.situacao NOT IN (
+                      'congelada',
+                      'encerrada'
+                  )
+                  AND men.situacao IN (
+                      'pendente',
+                      'atrasada'
+                  )
+                  AND date(men.data_vencimento)
+                      < date(?)
+          )
+        """,
+        (hoje,),
+    )
+
+
+def regularizar_alunos_sem_pendencias(
+    conexao,
+):
+    conexao.execute(
+        """
+        UPDATE aluno
+        SET
+            situacao = 'ativo',
+            atualizado_em = CURRENT_TIMESTAMP
+        WHERE situacao = 'inadimplente'
+          AND EXISTS (
+                SELECT 1
+                FROM matricula m
+                WHERE m.aluno_id = aluno.id
+                  AND m.situacao = 'ativa'
+          )
+          AND NOT EXISTS (
+                SELECT 1
+                FROM matricula m
+                JOIN mensalidade men
+                    ON men.matricula_id = m.id
+                WHERE m.aluno_id = aluno.id
+                  AND m.situacao = 'ativa'
+                  AND men.situacao IN (
+                      'pendente',
+                      'atrasada'
+                  )
+                  AND date(men.data_vencimento)
+                      < date('now')
+          )
+        """
+    )
+
+
+def listar_inadimplentes(
+    conexao,
+    pesquisa="",
+):
+    termo = f"%{pesquisa.strip()}%"
+
+    return conexao.execute(
+        """
+        SELECT
+            a.id AS aluno_id,
+            a.nome AS aluno,
+            a.cpf,
+            a.telefone,
+            p.nome AS plano,
+            COUNT(men.id) AS parcelas_atrasadas,
+            MIN(
+                men.data_vencimento
+            ) AS vencimento_mais_antigo,
+            SUM(men.valor) AS total_pendente
+        FROM aluno a
+        JOIN matricula m
+            ON m.aluno_id = a.id
+        JOIN plano p
+            ON p.id = m.plano_id
+        JOIN mensalidade men
+            ON men.matricula_id = m.id
+        WHERE a.situacao = 'inadimplente'
+          AND men.situacao = 'atrasada'
+          AND (
+                a.nome LIKE ? COLLATE NOCASE
+                OR a.cpf LIKE ?
+          )
+        GROUP BY
+            a.id,
+            a.nome,
+            a.cpf,
+            a.telefone,
+            p.nome
+        ORDER BY
+            vencimento_mais_antigo,
+            a.nome COLLATE NOCASE
+        """,
+        (
+            termo,
+            termo,
+        ),
+    ).fetchall()
+
+
+def contar_alunos_inadimplentes(
+    conexao,
+):
+    linha = conexao.execute(
+        """
+        SELECT COUNT(*) AS quantidade
+        FROM aluno
+        WHERE situacao = 'inadimplente'
+        """
+    ).fetchone()
+
+    return linha["quantidade"]
+
+def marcar_mensalidades_atrasadas(
+    conexao,
+    hoje,
+):
+    cursor = conexao.execute(
+        """
+        UPDATE mensalidade
+        SET situacao = 'atrasada'
+        WHERE situacao = 'pendente'
+          AND date(data_vencimento) < date(?)
+          AND matricula_id IN (
+                SELECT m.id
+                FROM matricula m
+                WHERE m.situacao NOT IN (
+                    'congelada',
+                    'encerrada'
+                )
+          )
+        """,
+        (hoje,),
+    )
+
+    return cursor.rowcount
+
+
+def atualizar_alunos_inadimplentes(
+    conexao,
+    hoje,
+):
+    conexao.execute(
+        """
+        UPDATE aluno
+        SET
+            situacao = 'inadimplente',
+            atualizado_em = CURRENT_TIMESTAMP
+        WHERE situacao NOT IN (
+            'congelado',
+            'inativo'
+        )
+          AND EXISTS (
+                SELECT 1
+                FROM matricula m
+                JOIN mensalidade men
+                    ON men.matricula_id = m.id
+                WHERE m.aluno_id = aluno.id
+                  AND m.situacao NOT IN (
+                      'congelada',
+                      'encerrada'
+                  )
+                  AND men.situacao IN (
+                      'pendente',
+                      'atrasada'
+                  )
+                  AND date(men.data_vencimento)
+                      < date(?)
+          )
+        """,
+        (hoje,),
+    )
+
+
+def regularizar_alunos_sem_pendencias(
+    conexao,
+):
+    conexao.execute(
+        """
+        UPDATE aluno
+        SET
+            situacao = 'ativo',
+            atualizado_em = CURRENT_TIMESTAMP
+        WHERE situacao = 'inadimplente'
+          AND EXISTS (
+                SELECT 1
+                FROM matricula m
+                WHERE m.aluno_id = aluno.id
+                  AND m.situacao = 'ativa'
+          )
+          AND NOT EXISTS (
+                SELECT 1
+                FROM matricula m
+                JOIN mensalidade men
+                    ON men.matricula_id = m.id
+                WHERE m.aluno_id = aluno.id
+                  AND m.situacao = 'ativa'
+                  AND men.situacao IN (
+                      'pendente',
+                      'atrasada'
+                  )
+                  AND date(men.data_vencimento)
+                      < date('now')
+          )
+        """
+    )
+
+
+def listar_inadimplentes(
+    conexao,
+    pesquisa="",
+):
+    termo = f"%{pesquisa.strip()}%"
+
+    return conexao.execute(
+        """
+        SELECT
+            a.id AS aluno_id,
+            a.nome AS aluno,
+            a.cpf,
+            a.telefone,
+            p.nome AS plano,
+            COUNT(men.id) AS parcelas_atrasadas,
+            MIN(
+                men.data_vencimento
+            ) AS vencimento_mais_antigo,
+            SUM(men.valor) AS total_pendente
+        FROM aluno a
+        JOIN matricula m
+            ON m.aluno_id = a.id
+        JOIN plano p
+            ON p.id = m.plano_id
+        JOIN mensalidade men
+            ON men.matricula_id = m.id
+        WHERE a.situacao = 'inadimplente'
+          AND men.situacao = 'atrasada'
+          AND (
+                a.nome LIKE ? COLLATE NOCASE
+                OR a.cpf LIKE ?
+          )
+        GROUP BY
+            a.id,
+            a.nome,
+            a.cpf,
+            a.telefone,
+            p.nome
+        ORDER BY
+            vencimento_mais_antigo,
+            a.nome COLLATE NOCASE
+        """,
+        (
+            termo,
+            termo,
+        ),
+    ).fetchall()
+
+
+def contar_alunos_inadimplentes(
+    conexao,
+):
+    linha = conexao.execute(
+        """
+        SELECT COUNT(*) AS quantidade
+        FROM aluno
+        WHERE situacao = 'inadimplente'
+        """
+    ).fetchone()
+
+    return linha["quantidade"]

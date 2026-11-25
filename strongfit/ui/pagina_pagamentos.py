@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from strongfit import repositorio_financeiro as repo
 from strongfit import servicos_financeiro
 from strongfit.erros import RegraNegocioErro
+from strongfit.servicos_inadimplencia import atualizar_inadimplencia
 
 
 class PaginaPagamentos(QWidget):
@@ -74,6 +75,11 @@ class PaginaPagamentos(QWidget):
             self.criar_aba_historico(),
             "Histórico de pagamentos",
         )
+        
+        self.abas.addTab(
+            self.criar_aba_inadimplentes(),
+            "Inadimplentes",
+        )
 
         self.abas.currentChanged.connect(
             lambda _indice: self.atualizar_tudo()
@@ -95,6 +101,146 @@ class PaginaPagamentos(QWidget):
         layout_principal.addWidget(
             self.mensagem
         )
+        
+    def criar_aba_inadimplentes(self):
+        aba = QWidget()
+
+        layout = QVBoxLayout(aba)
+        layout.setContentsMargins(
+            10,
+            10,
+            10,
+            10,
+        )
+        layout.setSpacing(12)
+
+        topo = QHBoxLayout()
+
+        titulo = QLabel(
+            "Alunos inadimplentes"
+        )
+        titulo.setObjectName(
+            "tituloSecao"
+        )
+
+        self.campo_pesquisa_inadimplentes = (
+            QLineEdit()
+        )
+        self.campo_pesquisa_inadimplentes.setPlaceholderText(
+            "Pesquisar por nome ou CPF"
+        )
+
+        topo.addWidget(titulo)
+        topo.addStretch()
+        topo.addWidget(
+            self.campo_pesquisa_inadimplentes
+        )
+
+        self.tabela_inadimplentes = QTableWidget(
+            0,
+            7,
+        )
+
+        self.tabela_inadimplentes.setHorizontalHeaderLabels(
+            [
+                "ID",
+                "Aluno",
+                "CPF",
+                "Telefone",
+                "Plano",
+                "Vencimento mais antigo",
+                "Total pendente",
+            ]
+        )
+
+        self.configurar_tabela(
+            self.tabela_inadimplentes
+        )
+
+        cabecalho = (
+            self.tabela_inadimplentes
+            .horizontalHeader()
+        )
+
+        cabecalho.setSectionResizeMode(
+            0,
+            QHeaderView
+            .ResizeMode
+            .ResizeToContents,
+        )
+
+        cabecalho.setSectionResizeMode(
+            1,
+            QHeaderView.ResizeMode.Stretch,
+        )
+
+        for coluna in range(2, 7):
+            cabecalho.setSectionResizeMode(
+                coluna,
+                QHeaderView
+                .ResizeMode
+                .ResizeToContents,
+            )
+
+        self.campo_pesquisa_inadimplentes.textChanged.connect(
+            self.atualizar_inadimplentes
+        )
+
+        layout.addLayout(topo)
+        layout.addWidget(
+            self.tabela_inadimplentes
+        )
+
+        return aba
+
+    def atualizar_inadimplentes(self):
+        linhas = repo.listar_inadimplentes(
+            self.conexao,
+            self.campo_pesquisa_inadimplentes.text(),
+        )
+
+        self.tabela_inadimplentes.setRowCount(
+            len(linhas)
+        )
+
+        for linha, aluno in enumerate(
+            linhas
+        ):
+            valores = [
+                aluno["aluno_id"],
+                aluno["aluno"],
+                aluno["cpf"] or "",
+                aluno["telefone"] or "",
+                aluno["plano"],
+                self.formatar_data(
+                    aluno["vencimento_mais_antigo"]
+                ),
+                self.formatar_moeda(
+                    aluno["total_pendente"]
+                ),
+            ]
+
+            for coluna, valor in enumerate(
+                valores
+            ):
+                item = QTableWidgetItem(
+                    str(valor)
+                )
+
+                if coluna in (
+                    0,
+                    5,
+                    6,
+                ):
+                    item.setTextAlignment(
+                        Qt.AlignmentFlag.AlignCenter
+                    )
+
+                self.tabela_inadimplentes.setItem(
+                    linha,
+                    coluna,
+                    item,
+                )
 
     def criar_aba_mensalidades(self):
         aba = QWidget()
@@ -702,6 +848,10 @@ class PaginaPagamentos(QWidget):
             self.tabela_mensalidades.clearSelection()
 
     def atualizar_tudo(self):
+        atualizar_inadimplencia(
+            self.conexao
+        )
+
         self.atualizar_mensalidades()
         self.atualizar_historico()
 

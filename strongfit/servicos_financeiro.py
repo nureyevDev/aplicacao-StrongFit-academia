@@ -184,13 +184,38 @@ def registrar_pagamento(
                 "paga",
             )
 
-            repo.atualizar_situacao_aluno(
-                conexao,
-                mensalidade["aluno_id"],
-                "ativo",
-            )
+            pendencias = conexao.execute(
+                """
+                SELECT COUNT(*) AS quantidade
+                FROM mensalidade men
+                JOIN matricula m
+                    ON m.id = men.matricula_id
+                WHERE m.aluno_id = ?
+                AND men.situacao = 'atrasada'
+                """,
+                (mensalidade["aluno_id"],),
+            ).fetchone()["quantidade"]
 
-            return pagamento_id
+            if pendencias == 0:
+                pendencias = conexao.execute(
+                    """
+                    SELECT COUNT(*) AS quantidade
+                    FROM mensalidade men
+                    JOIN matricula m
+                        ON m.id = men.matricula_id
+                    WHERE m.aluno_id = ?
+                    AND men.situacao = 'atrasada'
+                    """,
+                    (mensalidade["aluno_id"],),
+                ).fetchone()["quantidade"]
+
+                if pendencias == 0:
+                    repo.atualizar_situacao_aluno(
+                        conexao,
+                        mensalidade["aluno_id"],
+                        "ativo",
+                    )
+                
 
     except sqlite3.IntegrityError as erro:
         raise RegraNegocioErro(
