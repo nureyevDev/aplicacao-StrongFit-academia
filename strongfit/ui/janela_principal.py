@@ -15,6 +15,7 @@ from strongfit.ui.pagina_alunos import PaginaAlunos
 from strongfit.ui.pagina_inicio import PaginaInicio
 from strongfit.ui.pagina_planos import PaginaPlanos
 from strongfit.ui.pagina_matriculas import PaginaMatriculas
+from strongfit.ui.pagina_pagamentos import PaginaPagamentos
 
 class JanelaPrincipal(QMainWindow):
     def __init__(self, conexao):
@@ -62,6 +63,10 @@ class JanelaPrincipal(QMainWindow):
         self.pagina_matriculas = PaginaMatriculas(
             self.conexao
         )
+        
+        self.pagina_pagamentos = PaginaPagamentos(
+            self.conexao
+        )
 
         self.paginas.addWidget(
             self.pagina_inicio
@@ -77,6 +82,10 @@ class JanelaPrincipal(QMainWindow):
 
         self.paginas.addWidget(
             self.pagina_matriculas
+        )
+
+        self.paginas.addWidget(
+            self.pagina_pagamentos
         )
 
         layout_principal.addWidget(
@@ -189,6 +198,9 @@ class JanelaPrincipal(QMainWindow):
 
             elif indice == 3:
                 self.pagina_matriculas.atualizar_tudo()
+                
+            elif indice == 4:
+                self.pagina_pagamentos.atualizar_tudo()
                 
                 
         self.paginas.setCurrentIndex(indice)
@@ -319,8 +331,11 @@ class JanelaPrincipal(QMainWindow):
             QLineEdit,
             QComboBox,
             QDateEdit,
+            QDateTimeEdit,
             QSpinBox,
-            QDoubleSpinBox {
+            QDoubleSpinBox,
+            QTextEdit {
+            
                 background-color: #ffffff;
                 color: #243128;
                 border: 1px solid #aebcb1;
@@ -332,8 +347,10 @@ class JanelaPrincipal(QMainWindow):
             QLineEdit:focus,
             QComboBox:focus,
             QDateEdit:focus,
+            QDateTimeEdit:focus,
             QSpinBox:focus,
-            QDoubleSpinBox:focus {
+            QDoubleSpinBox:focus
+            QTextEdit:focus {
                 border: 2px solid #3b684a;
             }
 
@@ -378,7 +395,25 @@ class JanelaPrincipal(QMainWindow):
                 background-color: #527d60;
                 color: #ffffff;
             }
+            
+            QTabWidget::pane {
+                background-color: transparent;
+                border: none;
+            }
 
+            QTabBar::tab {
+                background-color: #dce7de;
+                color: #294a35;
+                border: 1px solid #b7cbbb;
+                padding: 9px 16px;
+                min-width: 150px;
+            }
+
+            QTabBar::tab:selected {
+                background-color: #3b684a;
+                color: #ffffff;
+            }
+            
             QHeaderView::section {
                 background-color: #294a35;
                 color: #ffffff;

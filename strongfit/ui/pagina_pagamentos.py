@@ -710,11 +710,18 @@ class PaginaPagamentos(QWidget):
         if not data_iso:
             return ""
 
-        return (
+        partes = (
             str(data_iso)
             .split(" ")[0]
             .split("-")
-        )[::-1]
+        )
+
+        if len(partes) != 3:
+            return str(data_iso)
+
+        return "/".join(
+            reversed(partes)
+        )
 
     @staticmethod
     def formatar_data_hora(valor):
