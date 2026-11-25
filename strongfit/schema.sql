@@ -130,6 +130,17 @@ CREATE TABLE IF NOT EXISTS pagamento (
         ON DELETE SET NULL
 );
 
+CREATE INDEX IF NOT EXISTS
+idx_mensalidade_vencimento
+ON mensalidade(data_vencimento);
+
+CREATE INDEX IF NOT EXISTS
+idx_mensalidade_situacao
+ON mensalidade(situacao);
+
+CREATE INDEX IF NOT EXISTS
+idx_pagamento_data
+ON pagamento(data_pagamento);
 
 CREATE TABLE IF NOT EXISTS congelamento (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
