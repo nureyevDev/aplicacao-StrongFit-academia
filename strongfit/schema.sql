@@ -156,6 +156,10 @@ CREATE TABLE IF NOT EXISTS congelamento (
         ON DELETE RESTRICT
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS
+idx_congelamento_aberto_por_matricula
+ON congelamento(matricula_id)
+WHERE data_fim_real IS NULL;
 
 CREATE TABLE IF NOT EXISTS observacao_aluno (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
