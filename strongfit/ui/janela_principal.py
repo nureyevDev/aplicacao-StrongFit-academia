@@ -463,5 +463,43 @@ class JanelaPrincipal(QMainWindow):
                 background-color: #3b684a;
                 border-color: #294a35;
             }
+            
+             QScrollArea#areaPaginaAlunos {
+                background-color: transparent;
+                border: none;
+            }
+
+            QScrollArea#areaPaginaAlunos > QWidget > QWidget {
+                background-color: #f4f6f8;
+            }
+
+            QWidget#conteudoPaginaAlunos,
+            QWidget#areaSuperiorAlunos {
+                background-color: transparent;
+            }
+            
+            QScrollBar:vertical {
+                background-color: #e5ece7;
+                width: 12px;
+                margin: 0;
+            }
+
+            QScrollBar::handle:vertical {
+                background-color: #9eb4a3;
+                border-radius: 6px;
+                min-height: 35px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background-color: #65836d;
+            }
+
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {
+                height: 0;
+            }
             """
             )
+        
+
+           

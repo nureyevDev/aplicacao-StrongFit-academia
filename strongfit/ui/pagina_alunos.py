@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QSplitter,
     QTableWidget,
     QTableWidgetItem,
@@ -251,7 +253,39 @@ class PaginaAlunos(QWidget):
         
     
     def montar_interface(self):
-        layout_principal = QVBoxLayout(self)
+        layout_externo = QVBoxLayout(self)
+        layout_externo.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+        layout_externo.setSpacing(0)
+
+        area_rolagem = QScrollArea()
+        area_rolagem.setObjectName(
+            "areaPaginaAlunos"
+        )
+        area_rolagem.setWidgetResizable(True)
+        area_rolagem.setFrameShape(
+            QFrame.Shape.NoFrame
+        )
+        area_rolagem.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        area_rolagem.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+        conteudo_pagina = QWidget()
+        conteudo_pagina.setObjectName(
+            "conteudoPaginaAlunos"
+        )
+        conteudo_pagina.setMinimumWidth(950)
+
+        layout_principal = QVBoxLayout(
+            conteudo_pagina
+        )
         layout_principal.setContentsMargins(
             22,
             22,
@@ -282,49 +316,81 @@ class PaginaAlunos(QWidget):
             Qt.Orientation.Vertical
         )
 
+        # Impede que uma das áreas seja totalmente comprimida.
+        divisor.setChildrenCollapsible(False)
+
         area_superior = QWidget()
-        conteudo = QHBoxLayout(
+        area_superior.setObjectName(
+            "areaSuperiorAlunos"
+        )
+        area_superior.setMinimumHeight(470)
+
+        conteudo_superior = QHBoxLayout(
             area_superior
         )
-        conteudo.setContentsMargins(
+        conteudo_superior.setContentsMargins(
             0,
             0,
             0,
             0,
         )
-        conteudo.setSpacing(16)
+        conteudo_superior.setSpacing(16)
 
-        conteudo.addWidget(
-            self.criar_formulario(),
+        self.cartao_formulario = (
+            self.criar_formulario()
+        )
+        self.cartao_lista = self.criar_lista()
+
+        self.cartao_formulario.setMinimumWidth(
+            410
+        )
+        self.cartao_formulario.setMinimumHeight(
+            450
+        )
+        self.cartao_formulario.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
+        )
+
+        self.cartao_lista.setMinimumWidth(600)
+        self.cartao_lista.setMinimumHeight(450)
+        self.cartao_lista.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
+        )
+
+        conteudo_superior.addWidget(
+            self.cartao_formulario,
             2,
         )
-
-        conteudo.addWidget(
-            self.criar_lista(),
+        conteudo_superior.addWidget(
+            self.cartao_lista,
             3,
         )
 
-        divisor.addWidget(
-            area_superior
-        )
-
-        divisor.addWidget(
+        self.area_observacoes = (
             self.criar_area_observacoes()
         )
+        self.area_observacoes.setMinimumHeight(
+            300
+        )
+        self.area_observacoes.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
 
-        divisor.setStretchFactor(
-            0,
-            3,
+        divisor.addWidget(area_superior)
+        divisor.addWidget(
+            self.area_observacoes
         )
-        divisor.setStretchFactor(
-            1,
-            2,
-        )
+
+        divisor.setStretchFactor(0, 3)
+        divisor.setStretchFactor(1, 2)
 
         divisor.setSizes(
             [
                 470,
-                260,
+                320,
             ]
         )
 
@@ -339,16 +405,34 @@ class PaginaAlunos(QWidget):
         self.mensagem.setObjectName(
             "mensagem"
         )
+        self.mensagem.setWordWrap(True)
+        self.mensagem.setMinimumHeight(48)
 
         layout_principal.addWidget(
             self.mensagem
         )
 
+        area_rolagem.setWidget(
+            conteudo_pagina
+        )
+
+        layout_externo.addWidget(
+            area_rolagem
+        )
+
     def criar_formulario(self):
         frame = QFrame()
         frame.setObjectName("cartao")
+        frame.setMinimumHeight(450)
 
         layout = QVBoxLayout(frame)
+        layout.setContentsMargins(
+            18,
+            18,
+            18,
+            18,
+        )
+        layout.setSpacing(12)
 
         titulo = QLabel(
             "Dados do aluno"
@@ -356,10 +440,23 @@ class PaginaAlunos(QWidget):
         titulo.setObjectName(
             "tituloSecao"
         )
+
         layout.addWidget(titulo)
 
         formulario = QFormLayout()
-        formulario.setSpacing(10)
+        formulario.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+        formulario.setHorizontalSpacing(14)
+        formulario.setVerticalSpacing(10)
+
+        formulario.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy
+            .AllNonFixedFieldsGrow
+        )
 
         self.campo_nome = QLineEdit()
         self.campo_nome.setPlaceholderText(
@@ -415,6 +512,19 @@ class PaginaAlunos(QWidget):
             "Inativo",
             "inativo",
         )
+        
+        campos = [
+            self.campo_nome,
+            self.campo_cpf,
+            self.data_nascimento,
+            self.campo_telefone,
+            self.campo_email,
+            self.campo_endereco,
+            self.combo_situacao,
+        ]
+
+        for campo in campos:
+            campo.setMinimumHeight(36)
 
         formulario.addRow(
             "Nome *",
@@ -460,9 +570,14 @@ class PaginaAlunos(QWidget):
             "Limpar"
         )
 
+        
         self.botao_salvar.clicked.connect(
             self.salvar_aluno
         )
+        
+        self.botao_salvar.setMinimumHeight(44)
+        
+        self.botao_limpar.setMinimumHeight(44)
 
         self.botao_limpar.clicked.connect(
             self.limpar_formulario
@@ -476,15 +591,24 @@ class PaginaAlunos(QWidget):
         )
 
         layout.addLayout(botoes)
-
+        layout.addStretch()
+        
         return frame
 
     def criar_lista(self):
         frame = QFrame()
         frame.setObjectName("cartao")
+        frame.setMinimumHeight(450)
 
         layout = QVBoxLayout(frame)
-
+        layout.setContentsMargins(
+            18,
+            18,
+            18,
+            18,
+        )
+        layout.setSpacing(12)
+        
         topo = QHBoxLayout()
 
         titulo = QLabel(
@@ -534,6 +658,8 @@ class PaginaAlunos(QWidget):
             0,
             6,
         )
+
+        self.tabela.setMinimumHeight(300)
 
         self.tabela.setHorizontalHeaderLabels(
             [
@@ -612,8 +738,15 @@ class PaginaAlunos(QWidget):
     def criar_area_observacoes(self):
         frame = QFrame()
         frame.setObjectName("cartao")
+        frame.setMinimumHeight(300)
 
         layout = QVBoxLayout(frame)
+        layout.setContentsMargins(
+            18,
+            18,
+            18,
+            18,
+        )
         layout.setSpacing(12)
 
         topo = QHBoxLayout()
@@ -740,6 +873,10 @@ class PaginaAlunos(QWidget):
         self.tabela_observacoes = QTableWidget(
             0,
             4,
+        )
+        
+        self.tabela_observacoes.setMinimumHeight(
+            150
         )
 
         self.tabela_observacoes.setHorizontalHeaderLabels(
