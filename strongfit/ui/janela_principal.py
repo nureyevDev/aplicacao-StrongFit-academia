@@ -16,6 +16,7 @@ from strongfit.ui.pagina_inicio import PaginaInicio
 from strongfit.ui.pagina_planos import PaginaPlanos
 from strongfit.ui.pagina_matriculas import PaginaMatriculas
 from strongfit.ui.pagina_pagamentos import PaginaPagamentos
+from strongfit.ui.pagina_congelamentos import PaginaCongelamentos
 
 class JanelaPrincipal(QMainWindow):
     def __init__(self, conexao):
@@ -67,6 +68,12 @@ class JanelaPrincipal(QMainWindow):
         self.pagina_pagamentos = PaginaPagamentos(
             self.conexao
         )
+        
+        self.pagina_congelamentos = (
+            PaginaCongelamentos(
+                self.conexao
+            )
+        )
 
         self.paginas.addWidget(
             self.pagina_inicio
@@ -86,6 +93,10 @@ class JanelaPrincipal(QMainWindow):
 
         self.paginas.addWidget(
             self.pagina_pagamentos
+        )
+        
+        self.paginas.addWidget(
+            self.pagina_congelamentos
         )
 
         layout_principal.addWidget(
@@ -201,6 +212,9 @@ class JanelaPrincipal(QMainWindow):
                 
             elif indice == 4:
                 self.pagina_pagamentos.atualizar_tudo()
+                
+            elif indice == 5:
+                self.pagina_congelamentos.atualizar_tudo()
                 
                 
         self.paginas.setCurrentIndex(indice)
