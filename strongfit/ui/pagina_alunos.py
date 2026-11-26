@@ -7,18 +7,23 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QHeaderView,
+    QGroupBox,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QSplitter,
     QTableWidget,
     QTableWidgetItem,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
 from strongfit import repositorio_alunos as repo
+from strongfit import repositorio_observacoes as repo_observacoes
 from strongfit import servicos_alunos
+from strongfit import servicos_observacoes
 from strongfit.erros import RegraNegocioErro
 
 
@@ -28,10 +33,223 @@ class PaginaAlunos(QWidget):
 
         self.conexao = conexao
         self.aluno_selecionado_id = None
+        self.observacao_selecionada_id = None
 
         self.montar_interface()
         self.atualizar_tabela()
 
+    
+    def registrar_observacao(self):
+        try:
+            servicos_observacoes.registrar_observacao(
+                self.conexao,
+                self.aluno_selecionado_id,
+                self.campo_observacao
+                .toPlainText(),
+            )
+
+        except RegraNegocioErro as erro:
+            QMessageBox.warning(
+                self,
+                "StrongFit Academia",
+                str(erro),
+            )
+            return
+
+        self.campo_observacao.clear()
+        self.atualizar_observacoes()
+
+        self.mensagem.setText(
+            "Observação registrada com sucesso."
+        )
+        
+    def atualizar_observacoes(self):
+        if self.aluno_selecionado_id is None:
+            self.tabela_observacoes.setRowCount(
+                0
+            )
+            return
+
+        linhas = (
+            repo_observacoes
+            .listar_observacoes_do_aluno(
+                self.conexao,
+                self.aluno_selecionado_id,
+                self.campo_pesquisa_observacao
+                .text(),
+            )
+        )
+
+        self.tabela_observacoes.setRowCount(
+            len(linhas)
+        )
+
+        for linha, observacao in enumerate(
+            linhas
+        ):
+            valores = [
+                observacao["id"],
+                self.formatar_data_hora(
+                    observacao["criado_em"]
+                ),
+                observacao["usuario"],
+                observacao["texto"],
+            ]
+
+            for coluna, valor in enumerate(
+                valores
+            ):
+                item = QTableWidgetItem(
+                    str(valor)
+                )
+
+                if coluna in (0, 1):
+                    item.setTextAlignment(
+                        Qt.AlignmentFlag.AlignCenter
+                    )
+
+                self.tabela_observacoes.setItem(
+                    linha,
+                    coluna,
+                    item,
+                )
+
+        self.tabela_observacoes.clearSelection()
+        self.observacao_selecionada_id = None
+        self.botao_excluir_observacao.setEnabled(
+            False
+        )
+    
+    def selecionar_observacao(self):
+        linha = (
+            self.tabela_observacoes
+            .currentRow()
+        )
+
+        if linha < 0:
+            self.observacao_selecionada_id = (
+                None
+            )
+            self.botao_excluir_observacao.setEnabled(
+                False
+            )
+            return
+
+        self.observacao_selecionada_id = int(
+            self.tabela_observacoes.item(
+                linha,
+                0,
+            ).text()
+        )
+
+        self.botao_excluir_observacao.setEnabled(
+            True
+        )
+    
+    def excluir_observacao(self):
+        if (
+            self.observacao_selecionada_id
+            is None
+        ):
+            QMessageBox.warning(
+                self,
+                "StrongFit Academia",
+                "Selecione uma observação.",
+            )
+            return
+
+        resposta = QMessageBox.question(
+            self,
+            "Confirmar exclusão",
+            (
+                "Deseja excluir a observação "
+                "selecionada?\n\n"
+                "Essa operação não poderá "
+                "ser desfeita."
+            ),
+            (
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No
+            ),
+            QMessageBox.StandardButton.No,
+        )
+
+        if (
+            resposta
+            != QMessageBox.StandardButton.Yes
+        ):
+            return
+
+        try:
+            servicos_observacoes.remover_observacao(
+                self.conexao,
+                self.observacao_selecionada_id,
+            )
+
+        except RegraNegocioErro as erro:
+            QMessageBox.warning(
+                self,
+                "StrongFit Academia",
+                str(erro),
+            )
+            return
+
+        self.atualizar_observacoes()
+
+        self.mensagem.setText(
+            "Observação excluída com sucesso."
+        )
+        
+    def atualizar_contador_observacao(self):
+        tamanho = len(
+            self.campo_observacao
+            .toPlainText()
+        )
+
+        self.contador_observacao.setText(
+            f"{tamanho}/1000 caracteres"
+        )
+
+        ultrapassou = tamanho > 1000
+
+        self.botao_salvar_observacao.setEnabled(
+            (
+                self.aluno_selecionado_id
+                is not None
+            )
+            and not ultrapassou
+        )
+
+        if ultrapassou:
+            self.contador_observacao.setStyleSheet(
+                "color: #a6403a;"
+            )
+        else:
+            self.contador_observacao.setStyleSheet(
+                ""
+            )    
+       
+    @staticmethod
+    def formatar_data_hora(valor):
+        if not valor:
+            return ""
+
+        texto = str(valor)
+        data, _, hora = texto.partition(" ")
+
+        partes = data.split("-")
+
+        if len(partes) == 3:
+            data = "/".join(
+                reversed(partes)
+            )
+
+        return (
+            f"{data} {hora[:5]}"
+            .strip()
+        )
+        
+    
     def montar_interface(self):
         layout_principal = QVBoxLayout(self)
         layout_principal.setContentsMargins(
@@ -60,20 +278,58 @@ class PaginaAlunos(QWidget):
         layout_principal.addWidget(titulo)
         layout_principal.addWidget(subtitulo)
 
-        conteudo = QHBoxLayout()
+        divisor = QSplitter(
+            Qt.Orientation.Vertical
+        )
+
+        area_superior = QWidget()
+        conteudo = QHBoxLayout(
+            area_superior
+        )
+        conteudo.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
         conteudo.setSpacing(16)
 
         conteudo.addWidget(
             self.criar_formulario(),
             2,
         )
+
         conteudo.addWidget(
             self.criar_lista(),
             3,
         )
 
-        layout_principal.addLayout(
-            conteudo,
+        divisor.addWidget(
+            area_superior
+        )
+
+        divisor.addWidget(
+            self.criar_area_observacoes()
+        )
+
+        divisor.setStretchFactor(
+            0,
+            3,
+        )
+        divisor.setStretchFactor(
+            1,
+            2,
+        )
+
+        divisor.setSizes(
+            [
+                470,
+                260,
+            ]
+        )
+
+        layout_principal.addWidget(
+            divisor,
             1,
         )
 
@@ -352,6 +608,230 @@ class PaginaAlunos(QWidget):
         layout.addWidget(self.tabela)
 
         return frame
+    
+    def criar_area_observacoes(self):
+        frame = QFrame()
+        frame.setObjectName("cartao")
+
+        layout = QVBoxLayout(frame)
+        layout.setSpacing(12)
+
+        topo = QHBoxLayout()
+
+        titulo = QLabel(
+            "Observações do aluno"
+        )
+        titulo.setObjectName(
+            "tituloSecao"
+        )
+
+        self.rotulo_aluno_observacao = QLabel(
+            "Selecione um aluno na tabela"
+        )
+        self.rotulo_aluno_observacao.setObjectName(
+            "destaque"
+        )
+
+        topo.addWidget(titulo)
+        topo.addStretch()
+        topo.addWidget(
+            self.rotulo_aluno_observacao
+        )
+
+        layout.addLayout(topo)
+
+        conteudo = QHBoxLayout()
+        conteudo.setSpacing(14)
+
+        formulario = QVBoxLayout()
+
+        self.campo_observacao = QTextEdit()
+        self.campo_observacao.setPlaceholderText(
+            "Digite uma informação relevante "
+            "sobre o aluno"
+        )
+        self.campo_observacao.setMaximumHeight(
+            120
+        )
+        self.campo_observacao.setEnabled(False)
+
+        self.contador_observacao = QLabel(
+            "0/1000 caracteres"
+        )
+        self.contador_observacao.setObjectName(
+            "contador"
+        )
+
+        self.botao_salvar_observacao = (
+            QPushButton(
+                "Registrar observação"
+            )
+        )
+        self.botao_salvar_observacao.setObjectName(
+            "botaoPrimario"
+        )
+        self.botao_salvar_observacao.setEnabled(
+            False
+        )
+
+        self.botao_salvar_observacao.clicked.connect(
+            self.registrar_observacao
+        )
+
+        self.campo_observacao.textChanged.connect(
+            self.atualizar_contador_observacao
+        )
+
+        formulario.addWidget(
+            QLabel("Nova observação")
+        )
+        formulario.addWidget(
+            self.campo_observacao
+        )
+        formulario.addWidget(
+            self.contador_observacao
+        )
+        formulario.addWidget(
+            self.botao_salvar_observacao
+        )
+        formulario.addStretch()
+
+        historico = QVBoxLayout()
+
+        filtros = QHBoxLayout()
+
+        self.campo_pesquisa_observacao = (
+            QLineEdit()
+        )
+        self.campo_pesquisa_observacao.setPlaceholderText(
+            "Pesquisar no histórico"
+        )
+        self.campo_pesquisa_observacao.setEnabled(
+            False
+        )
+
+        self.botao_excluir_observacao = (
+            QPushButton(
+                "Excluir selecionada"
+            )
+        )
+        self.botao_excluir_observacao.setObjectName(
+            "botaoPerigo"
+        )
+        self.botao_excluir_observacao.setEnabled(
+            False
+        )
+
+        self.botao_excluir_observacao.clicked.connect(
+            self.excluir_observacao
+        )
+
+        self.campo_pesquisa_observacao.textChanged.connect(
+            self.atualizar_observacoes
+        )
+
+        filtros.addWidget(
+            self.campo_pesquisa_observacao
+        )
+        filtros.addWidget(
+            self.botao_excluir_observacao
+        )
+
+        self.tabela_observacoes = QTableWidget(
+            0,
+            4,
+        )
+
+        self.tabela_observacoes.setHorizontalHeaderLabels(
+            [
+                "ID",
+                "Data e hora",
+                "Responsável",
+                "Observação",
+            ]
+        )
+
+        self.tabela_observacoes.setSelectionBehavior(
+            QAbstractItemView
+            .SelectionBehavior
+            .SelectRows
+        )
+
+        self.tabela_observacoes.setSelectionMode(
+            QAbstractItemView
+            .SelectionMode
+            .SingleSelection
+        )
+
+        self.tabela_observacoes.setEditTriggers(
+            QAbstractItemView
+            .EditTrigger
+            .NoEditTriggers
+        )
+
+        self.tabela_observacoes.setAlternatingRowColors(
+            True
+        )
+
+        self.tabela_observacoes.verticalHeader().setVisible(
+            False
+        )
+
+        cabecalho = (
+            self.tabela_observacoes
+            .horizontalHeader()
+        )
+
+        cabecalho.setSectionResizeMode(
+            0,
+            QHeaderView
+            .ResizeMode
+            .ResizeToContents,
+        )
+
+        cabecalho.setSectionResizeMode(
+            1,
+            QHeaderView
+            .ResizeMode
+            .ResizeToContents,
+        )
+
+        cabecalho.setSectionResizeMode(
+            2,
+            QHeaderView
+            .ResizeMode
+            .ResizeToContents,
+        )
+
+        cabecalho.setSectionResizeMode(
+            3,
+            QHeaderView.ResizeMode.Stretch,
+        )
+
+        self.tabela_observacoes.itemSelectionChanged.connect(
+            self.selecionar_observacao
+        )
+
+        historico.addLayout(filtros)
+        historico.addWidget(
+            self.tabela_observacoes
+        )
+
+        conteudo.addLayout(
+            formulario,
+            2,
+        )
+        conteudo.addLayout(
+            historico,
+            4,
+        )
+
+        layout.addLayout(
+            conteudo,
+            1,
+        )
+
+        return frame
 
     def dados_formulario(self):
         data = self.data_nascimento.date()
@@ -498,6 +978,27 @@ class PaginaAlunos(QWidget):
             max(indice, 0)
         )
 
+        self.rotulo_aluno_observacao.setText(
+            aluno["nome"]
+        )
+
+        self.campo_observacao.setEnabled(
+            True
+        )
+
+        self.campo_pesquisa_observacao.setEnabled(
+            True
+        )
+
+        self.botao_salvar_observacao.setEnabled(
+            True
+        )
+
+        self.campo_observacao.clear()
+        self.campo_pesquisa_observacao.clear()
+
+        self.atualizar_observacoes()
+
         self.botao_salvar.setText(
             "Atualizar"
         )
@@ -505,6 +1006,7 @@ class PaginaAlunos(QWidget):
         self.mensagem.setText(
             "Aluno selecionado para edição."
         )
+        
 
     def limpar_formulario(self):
         self.aluno_selecionado_id = None
@@ -523,6 +1025,30 @@ class PaginaAlunos(QWidget):
             "Cadastrar"
         )
         self.campo_nome.setFocus()
+        
+        self.observacao_selecionada_id = None
+
+        self.rotulo_aluno_observacao.setText(
+            "Selecione um aluno na tabela"
+        )
+
+        self.campo_observacao.clear()
+        self.campo_observacao.setEnabled(False)
+
+        self.campo_pesquisa_observacao.clear()
+        self.campo_pesquisa_observacao.setEnabled(
+            False
+        )
+
+        self.botao_salvar_observacao.setEnabled(
+            False
+        )
+
+        self.botao_excluir_observacao.setEnabled(
+            False
+        )
+
+        self.tabela_observacoes.setRowCount(0)
 
         self.mensagem.setText(
             "Formulário limpo."

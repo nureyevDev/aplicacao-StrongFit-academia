@@ -177,6 +177,12 @@ CREATE TABLE IF NOT EXISTS observacao_aluno (
         ON DELETE SET NULL
 );
 
+CREATE INDEX IF NOT EXISTS
+idx_observacao_aluno
+ON observacao_aluno(
+    aluno_id,
+    criado_em
+);
 
 CREATE TABLE IF NOT EXISTS configuracao (
     chave TEXT PRIMARY KEY,

@@ -381,6 +381,15 @@ class JanelaPrincipal(QMainWindow):
                 background-color: #cfddd2;
             }
 
+            QSplitter::handle {
+                background-color: #d3ded5;
+                height: 5px;
+            }
+
+            QSplitter::handle:hover {
+                background-color: #799682;
+            }
+
             QPushButton#botaoPrimario {
                 background-color: #3b684a;
                 color: #ffffff;
