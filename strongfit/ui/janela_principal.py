@@ -498,8 +498,63 @@ class JanelaPrincipal(QMainWindow):
             QScrollBar::sub-line:vertical {
                 height: 0;
             }
+            
+            QScrollArea#areaDashboard {
+                background-color: transparent;
+                border: none;
+            }
+
+            QScrollArea#areaDashboard > QWidget > QWidget {
+                background-color: #f4f6f8;
+            }
+
+            QWidget#conteudoDashboard {
+                background-color: transparent;
+            }
+
+            QFrame#cartaoIndicador {
+                background-color: #ffffff;
+                border: 1px solid #ccd6ce;
+                border-radius: 10px;
+                padding: 4px;
+            }
+
+            QFrame#cartaoIndicador:hover {
+                border-color: #77937f;
+            }
+
+            QFrame#cartaoIndicador[destaque="sucesso"] {
+                border-left: 5px solid #3b684a;
+            }
+
+            QFrame#cartaoIndicador[destaque="perigo"] {
+                border-left: 5px solid #a6403a;
+            }
+
+            QFrame#cartaoIndicador[destaque="aviso"] {
+                border-left: 5px solid #b7832f;
+            }
+
+            QFrame#cartaoIndicador[destaque="destaque"] {
+                border-left: 5px solid #456f97;
+            }
+
+            QFrame#cartaoIndicador[destaque="neutro"] {
+                border-left: 5px solid #7d8580;
+            }
+
+            QLabel#valorIndicador {
+                color: #1d3426;
+                font-family: "Segoe UI Semibold";
+                font-size: 24pt;
+            }
+
+            QLabel#rotuloIndicador {
+                color: #647269;
+                font-size: 10pt;
+            }
             """
             )
-        
+                    
 
-           
+                    
